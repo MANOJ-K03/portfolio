@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manoj K — Backend & Systems Engineer</title>
+<meta name="description" content="Manoj K — backend and systems engineer-in-training. Concurrency-safe platforms, real-time services, and retrieval pipelines.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0a0d12;
+    --panel:#11151c;
+    --panel-2:#161b24;
+    --border:#232935;
+    --border-soft:#1a1f29;
+    --text:#e6e9ee;
+    --text-muted:#8a93a3;
+    --text-faint:#565f6e;
+    --ok:#3ecf8e;
+    --ok-dim:#16301f;
+    --warn:#e7a33e;
+    --warn-dim:#3a2f1c;
+    --sidebar-w:220px;
+    --content-max:900px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
+  }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Manrope', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  h1,h2,h3{font-family:'Manrope',sans-serif; margin:0; font-weight:700;}
+  p{margin:0;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  :focus-visible{ outline:2px solid var(--ok); outline-offset:3px; }
+
+  /* status bar */
+  .statusbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    padding:10px 22px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--border);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-muted);
+    flex-wrap:wrap;
+  }
+  .statusbar .left{ display:flex; align-items:center; gap:10px; }
+  .statusbar .sysname{ color:var(--text); font-weight:600; }
+  .pulse-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--ok);
+    box-shadow:0 0 0 0 rgba(62,207,142,.55);
+    animation:pulse 2.2s infinite;
+    flex:none;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(62,207,142,.5); }
+    70%{ box-shadow:0 0 0 7px rgba(62,207,142,0); }
+    100%{ box-shadow:0 0 0 0 rgba(62,207,142,0); }
+  }
+  .statusbar .right{ display:flex; gap:18px; align-items:center; }
+  #clock{ color:var(--text-faint); white-space:nowrap; }
+
+  .shell{ display:grid; grid-template-columns:var(--sidebar-w) 1fr; }
+  @media (max-width:900px){ .shell{ grid-template-columns:1fr; } }
+
+  .sidebar{
+    border-right:1px solid var(--border);
+    padding:26px 20px;
+    position:sticky;
+    top:41px;
+    height:calc(100vh - 41px);
+  }
+  @media (max-width:900px){
+    .sidebar{ position:static; height:auto; border-right:none; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; padding:14px 18px; }
+  }
+  .nav-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  @media (max-width:900px){ .nav-list{ flex-direction:row; } }
+  .nav-list a{
+    display:flex; align-items:center; gap:10px;
+    text-decoration:none; color:var(--text-muted);
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+    padding:9px 10px; border-left:2px solid transparent;
+    white-space:nowrap;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .nav-list a:hover{ color:var(--text); }
+  .nav-list a.active{ color:var(--text); border-left-color:var(--ok); }
+  .nav-list .dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); flex:none; }
+  .nav-list a.active .dot{ background:var(--ok); }
+  @media (max-width:900px){ .nav-list a{ border-left:none; border-bottom:2px solid transparent;} .nav-list a.active{ border-bottom-color:var(--ok); } }
+
+  main{ min-width:0; }
+  .panelsec{
+    padding:76px 40px;
+    max-width:calc(var(--content-max) + 80px);
+    margin:0 auto;
+    border-bottom:1px solid var(--border-soft);
+  }
+  @media (max-width:720px){ .panelsec{ padding:56px 20px; } }
+  .panelsec:last-of-type{ border-bottom:none; }
+  .sec-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:14px;
+    margin-bottom:36px;
+  }
+  .sec-head h2{ font-size:22px; }
+  .sec-head .tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); }
+
+  /* overview */
+  .overview{ display:flex; gap:34px; align-items:center; flex-wrap:wrap; padding-top:20px; }
+  .avatar{
+    width:104px; height:104px; border-radius:50%;
+    background:var(--panel-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-size:28px; color:var(--ok);
+    flex:none; overflow:hidden;
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .overview-text{ max-width:56ch; }
+  .overview h1{ font-size:clamp(30px,4.6vw,42px); margin-bottom:8px; }
+  .role{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ok); margin-bottom:14px; }
+  .lead{ color:var(--text-muted); font-size:16px; }
+  .overview-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:22px; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:12.5px;
+    padding:10px 15px; border:1px solid var(--border);
+    background:var(--panel); color:var(--text); text-decoration:none;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .btn:hover{ border-color:var(--ok); background:var(--ok-dim); }
+  .btn.primary{ background:var(--ok); color:#08130d; border-color:var(--ok); font-weight:600; }
+  .btn.primary:hover{ background:#57dba0; }
+
+  /* services (projects) */
+  .card{
+    border:1px solid var(--border);
+    background:var(--panel);
+    margin-bottom:20px;
+  }
+  .card-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+    padding:18px 22px; border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .card-title-row{ display:flex; align-items:center; gap:10px; }
+  .card-title{ font-size:17px; font-weight:700; }
+  .pill{
+    font-family:'JetBrains Mono',monospace; font-size:10px;
+    padding:3px 8px; border:1px solid var(--ok); color:var(--ok);
+    display:inline-flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  .pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--ok); }
+  .pill.dev{ border-color:var(--warn); color:var(--warn); }
+  .pill.dev::before{ background:var(--warn); }
+  .card-stack{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-faint); text-align:right; }
+  .card-body{ padding:20px 22px 24px; }
+  .card-desc{ color:var(--text-muted); max-width:64ch; margin-bottom:18px; font-size:14.5px; }
+  .loglines{ list-style:none; margin:0; padding:0; display:grid; gap:10px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+  .loglines li{ display:grid; grid-template-columns:16px 1fr; gap:10px; color:var(--text); line-height:1.5; }
+  .loglines li::before{ content:"✓"; color:var(--ok); font-size:12px; }
+
+  .card.flash{ animation:flash 1s ease; }
+  @keyframes flash{ 0%{ border-color:var(--ok);} 100%{ border-color:var(--border);} }
+
+  .other-builds{
+    border:1px dashed var(--border); padding:18px 22px; font-size:14px; color:var(--text-muted);
+  }
+  .other-builds .t{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); margin-bottom:10px; }
+  .other-builds ul{ margin:0; padding-left:18px; }
+  .other-builds li{ margin-bottom:6px; }
+
+  /* metrics (skills) */
+  .metric-group{ margin-bottom:22px; }
+  .metric-group h3{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500;
+    color:var(--text-faint); margin-bottom:10px;
+  }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px;
+    padding:6px 11px; border:1px solid var(--border); background:var(--panel);
+    color:var(--text);
+  }
+
+  /* incidents (achievements) */
+  .incident{
+    display:grid; grid-template-columns:90px 1fr 110px;
+    gap:16px; padding:14px 0; border-bottom:1px solid var(--border-soft);
+    align-items:baseline;
+  }
+  .incident:last-child{ border-bottom:1px solid var(--border); }
+  .incident .id{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-faint); }
+  .incident .title{ font-size:14.5px; }
+  .incident .title .detail{ display:block; color:var(--text-muted); font-size:13px; margin-top:2px; }
+  .incident .status{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ok); text-align:right; white-space:nowrap;
+  }
+  @media (max-width:560px){
+    .incident{ grid-template-columns:1fr; gap:4px; }
+    .incident .status{ text-align:left; }
+  }
+
+  /* contact terminal */
+  .terminal{
+    border:1px solid var(--border); background:var(--panel-2);
+    font-family:'JetBrains Mono',monospace; font-size:13.5px;
+    padding:22px 24px;
+  }
+  .terminal .line{ margin-bottom:10px; }
+  .terminal .prompt{ color:var(--ok); }
+  .terminal .k{ color:var(--text-faint); }
+  .terminal a{ text-decoration:none; }
+  .terminal a:hover{ color:var(--ok); }
+  .cursor{
+    display:inline-block; width:8px; height:14px; background:var(--ok);
+    vertical-align:middle; margin-left:2px;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .contact-cta{ margin-top:22px; display:flex; gap:12px; flex-wrap:wrap; }
+
+  footer{
+    padding:26px 40px 46px; font-family:'JetBrains Mono',monospace; font-size:11px;
+    color:var(--text-faint); max-width:calc(var(--content-max) + 80px); margin:0 auto;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="statusbar">
+  <div class="left">
+    <span class="pulse-dot" aria-hidden="true"></span>
+    <span class="sysname">MANOJ K</span>
+    <span>· STATUS: OPERATIONAL · AVAILABLE FOR SDE INTERNSHIPS</span>
+  </div>
+  <div class="right">
+    <span id="clock" class="mono">—</span>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="sidebar" aria-label="Section index">
+    <ul class="nav-list" id="nav-list">
+      <li><a href="#overview" class="active"><span class="dot"></span>overview</a></li>
+      <li><a href="#services"><span class="dot"></span>services</a></li>
+      <li><a href="#metrics"><span class="dot"></span>metrics</a></li>
+      <li><a href="#incidents"><span class="dot"></span>incidents</a></li>
+      <li><a href="#contact"><span class="dot"></span>contact</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section class="panelsec" id="overview">
+      <div class="overview">
+        <div class="avatar" id="avatar">
+          <img src="./photo.jpeg" alt="Manoj K">
+        </div>
+        <div class="overview-text">
+          <h1>Manoj K</h1>
+          <div class="role">SDE-INTERN CANDIDATE · CSE (AI &amp; DATA ENGINEERING), VIT VELLORE</div>
+          <p class="lead">
+            I build the parts of an app that fail silently if you get them wrong — booking engines that
+            don't double-book under load, retrieval pipelines that rank the right passage, real-time layers
+            that keep every client in sync. This page runs like the systems I build: services, metrics, and
+            a log of what shipped.
+          </p>
+          <div class="overview-actions">
+            <a class="btn primary" href="#services">View services</a>
+            <a class="btn" href="https://github.com/MANOJ-K03" target="_blank" rel="noopener">github ↗</a>
+            <a class="btn" href="https://www.linkedin.com/in/manoj-k-914276325" target="_blank" rel="noopener">linkedin ↗</a>
+            <a class="btn" href="./Manoj_K_Resume.pdf" target="_blank" rel="noopener">resume.pdf</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES / PROJECTS -->
+    <section class="panelsec" id="services">
+      <div class="sec-head">
+        <h2>Services</h2>
+        <div class="tag">3 deployed</div>
+      </div>
+
+      <article class="card" id="svc-poolmesh">
+        <div class="card-head">
+          <div class="card-title-row">
+            <span class="card-title">PoolMesh</span>
+            <span class="pill">operational</span>
+          </div>
+          <div class="card-stack">Node.js · Express · MongoDB<br>Socket.io · Maps API · JWT</div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">Real-time ride-pooling platform that matches riders by evaluating candidate route combinations, not just origin/destination proximity.</p>
+          <ul class="loglines">
+            <li>Route validation rejects pools that don't actually reduce total distance</li>
+            <li>Fare split by marginal route contribution, with solo-fare and discount constraints enforced</li>
+            <li>JWT auth across separate rider / driver / admin roles</li>
+            <li>Socket.io pushes live ride, location, and trip-status updates</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card" id="svc-parking">
+        <div class="card-head">
+          <div class="card-title-row">
+            <span class="card-title">Smart Parking Reservation Platform</span>
+            <span class="pill">operational</span>
+          </div>
+          <div class="card-stack">Python · FastAPI · PostgreSQL<br>Redis · WebSockets · Docker</div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">A reservation system built around one constraint: two people should never book the same slot.</p>
+          <ul class="loglines">
+            <li>Redis atomic holds + Postgres row-level locking prevent double-booking under concurrent requests</li>
+            <li>TTL-based holds auto-release abandoned reservations</li>
+            <li>Idempotent booking confirmation makes retries and duplicate submissions safe</li>
+            <li>Occupancy synced live across instances via WebSockets + Redis Pub/Sub</li>
+            <li>Stateless services scale horizontally; surge pricing and geolocation-driven slot search built in</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card" id="svc-rag">
+        <div class="card-head">
+          <div class="card-title-row">
+            <span class="card-title">Hybrid RAG Retrieval &amp; Evaluation Pipeline</span>
+            <span class="pill">operational</span>
+          </div>
+          <div class="card-stack">Python · FastAPI · FAISS<br>BM25 · Cross-Encoder</div>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">A retrieval pipeline that doesn't trust a single search strategy on its own.</p>
+          <ul class="loglines">
+            <li>Dense (FAISS) + BM25 retrieval combined via Reciprocal Rank Fusion</li>
+            <li>Cross-encoder reranks candidates before downstream generation</li>
+            <li>Evaluation harness tracks Precision@k and Recall@k across dense, hybrid, and reranked runs</li>
+            <li>Source-provenance and observability: citations, latency, grounding quality</li>
+          </ul>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- METRICS / SKILLS -->
+    <section class="panelsec" id="metrics">
+      <div class="sec-head">
+        <h2>Metrics</h2>
+        <div class="tag">stack &amp; dependencies</div>
+      </div>
+
+      <div class="metric-group">
+        <h3>languages</h3>
+        <div class="chips">
+          <span class="chip">Java</span><span class="chip">Python</span><span class="chip">C++</span>
+          <span class="chip">JavaScript</span><span class="chip">SQL</span>
+        </div>
+      </div>
+      <div class="metric-group">
+        <h3>backend &amp; systems</h3>
+        <div class="chips">
+          <span class="chip">Node.js</span><span class="chip">Express.js</span><span class="chip">FastAPI</span>
+          <span class="chip">REST APIs</span><span class="chip">WebSockets / Socket.io</span>
+          <span class="chip">JWT Auth</span><span class="chip">RBAC</span><span class="chip">System Design</span>
+        </div>
+      </div>
+      <div class="metric-group">
+        <h3>databases</h3>
+        <div class="chips">
+          <span class="chip">PostgreSQL</span><span class="chip">MongoDB</span><span class="chip">Redis</span>
+        </div>
+      </div>
+      <div class="metric-group">
+        <h3>ai &amp; search</h3>
+        <div class="chips">
+          <span class="chip">RAG</span><span class="chip">FAISS</span><span class="chip">BM25</span>
+          <span class="chip">Cross-Encoder Reranking</span><span class="chip">LLM Integration</span>
+        </div>
+      </div>
+      <div class="metric-group">
+        <h3>tools</h3>
+        <div class="chips">
+          <span class="chip">Git</span><span class="chip">GitHub</span><span class="chip">Docker</span>
+          <span class="chip">Nginx</span><span class="chip">Postman</span>
+        </div>
+      </div>
+      <div class="metric-group">
+        <h3>cs fundamentals</h3>
+        <div class="chips">
+          <span class="chip">DSA</span><span class="chip">DAA</span><span class="chip">OOP</span>
+          <span class="chip">Operating Systems</span><span class="chip">Computer Networks</span>
+          <span class="chip">DBMS</span><span class="chip">Computer Architecture</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- INCIDENTS / ACHIEVEMENTS -->
+    <section class="panelsec" id="incidents">
+      <div class="sec-head">
+        <h2>Incidents</h2>
+        <div class="tag">education &amp; record — all resolved</div>
+      </div>
+
+      <div>
+        <div class="incident">
+          <div class="id mono">REC-01</div>
+          <div class="title">B.Tech, CSE (AI &amp; Data Engineering) — VIT Vellore, 2024–2028
+            <span class="detail">CGPA 9.60/10 · Branch 2nd Rank</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-02</div>
+          <div class="title">HSE — Govt. Hr. Sec. School, Karichipalayam, Namakkal, 2024
+            <span class="detail">96% · District 1st Rank (Government School category)</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-03</div>
+          <div class="title">SSLC, 2024
+            <span class="detail">94%</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-04</div>
+          <div class="title">Industry-Ready System Design
+            <span class="detail">Value Added Course, SCORE, VIT Vellore · Feb–Apr 2026</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-05</div>
+          <div class="title">Quantum Programming using Qiskit
+            <span class="detail">30-hour Value Added Course, VIT Vellore · Sep–Nov 2025</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-06</div>
+          <div class="title">VIT Student Council, 2026–27
+            <span class="detail">Students' Welfare Team</span>
+          </div>
+          <div class="status">ONGOING</div>
+        </div>
+        <div class="incident">
+          <div class="id mono">REC-07</div>
+          <div class="title">Merit Rank Award &amp; STAR Scheme Awardee
+            <span class="detail">VIT Vellore — outstanding academic excellence</span>
+          </div>
+          <div class="status">RESOLVED</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="panelsec" id="contact">
+      <div class="sec-head">
+        <h2>Contact</h2>
+        <div class="tag">reach out</div>
+      </div>
+
+      <div class="terminal">
+        <div class="line"><span class="prompt">$</span> contact --list</div>
+        <div class="line"><span class="k">email</span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="mailto:manojkaruppan03@gmail.com">manojkaruppan03@gmail.com</a></div>
+        <div class="line"><span class="k">phone</span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="tel:+917358405015">+91 73584 05015</a></div>
+        <div class="line"><span class="k">github</span>&nbsp;&nbsp;&nbsp;<a href="https://github.com/MANOJ-K03" target="_blank" rel="noopener">github.com/MANOJ-K03</a></div>
+        <div class="line"><span class="k">linkedin</span> <a href="https://www.linkedin.com/in/manoj-k-914276325" target="_blank" rel="noopener">linkedin.com/in/manoj-k-914276325</a></div>
+        <div class="line"><span class="k">location</span> Namakkal, Tamil Nadu, IN</div>
+        <div class="line"><span class="prompt">$</span> <span class="cursor" aria-hidden="true"></span></div>
+      </div>
+
+      <div class="contact-cta">
+        <a class="btn primary" href="mailto:manojkaruppan03@gmail.com">Email me</a>
+        <a class="btn" href="https://github.com/MANOJ-K03" target="_blank" rel="noopener">GitHub ↗</a>
+        <a class="btn" href="https://www.linkedin.com/in/manoj-k-914276325" target="_blank" rel="noopener">LinkedIn ↗</a>
+      </div>
+    </section>
+
+    <footer>
+      <span>MANOJ K — SYSTEM STATUS PAGE</span>
+      <span id="footclock" class="mono">—</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+  // live clock (IST)
+  function tick(){
+    var opts = { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'Asia/Kolkata' };
+    var t = new Date().toLocaleTimeString('en-GB', opts) + ' IST';
+    document.getElementById('clock').textContent = t;
+    var f = document.getElementById('footclock');
+    if(f) f.textContent = t;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // active section highlighting
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('#nav-list a'));
+    var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var idx = sections.indexOf(entry.target);
+        if(idx === -1) return;
+        if(entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('active'); });
+          links[idx].classList.add('active');
+        }
+      });
+    }, { rootMargin:'-40% 0px -55% 0px', threshold:0 });
+    sections.forEach(function(s){ if(s) observer.observe(s); });
+  })();
+</script>
+
+</body>
+</html>
